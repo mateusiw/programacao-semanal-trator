@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Programação de Trator SPG</title>
+    
+    <!-- Ícones e Manifest -->
+    <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/512/tractor.png">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/512/tractor.png">
+    <meta name="theme-color" content="#f59e0b">
+    
+    <!-- Bibliotecas Externas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            200: '#fde68a',
+                            300: '#fcd34d',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            800: '#92400e',
+                            900: '#78350f',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input, select, textarea { line-height: 1.5; }
+        .animate-fade-in-down { animation: fadeInDown 0.3s ease-out forwards; }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Toggle Switch Estilizado */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #f59e0b;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #f59e0b;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-20 select-none">
+
+    <!-- Navbar -->
+    <div class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center shadow-sm sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg shadow-sm border border-slate-100 bg-brand-100 flex items-center justify-center text-brand-600">
+                <i data-lucide="tractor" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold text-slate-800 leading-tight">SPG SEDE</h1>
+                <p class="text-[10px] text-brand-600 font-bold uppercase tracking-wide">Programação de Trator</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button type="button" onclick="confirmClearData()" class="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all active:scale-95 border border-slate-200">
+                <i data-lucide="trash-2" class="w-4 h-4 text-slate-500"></i>
+                <span class="hidden sm:inline">Limpar</span>
+            </button>
+            <button type="button" onclick="confirmBeforeSend()" class="flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-xs font-bold shadow-lg shadow-brand-500/20 transition-all active:scale-95">
+                <i data-lucide="share-2" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Gerar e Enviar</span>
+                <span class="sm:hidden">Enviar</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 flex flex-col lg:flex-row gap-8 mt-4">
+        
+        <!-- COLUNA DA ESQUERDA: FORMULÁRIO -->
+        <div class="w-full lg:w-1/2 space-y-4">
+
+            <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200/80">
+                <h2 class="text-lg font-black text-slate-800 flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                    <div class="p-2 bg-brand-50 rounded-xl text-brand-600">
+                        <i data-lucide="calendar" class="w-5 h-5"></i>
+                    </div>
+                    Informações da Semana
+                </h2>
+                
+                <form id="planningForm" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Número da Semana</label>
+                            <input type="number" id="weekNumber" required oninput="updateDayLabels(); updatePreview()" placeholder="Ex: 20" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Local / Veículo</label>
+                            <select id="localSelect" required onchange="updatePreview()" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm cursor-pointer">
+                                <option value="Trator">Trator</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Programado por</label>
+                            <select id="programadorSelect" onchange="handlePersonChange('programadorSelect', 'programadorCustomContainer'); updatePreview();" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm cursor-pointer">
+                                <option value="">Selecione.</option>
+                                <option value="José Márcio">José Márcio</option>
+                                <option value="Guilherme Ramos">Guilherme Ramos</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                            <div id="programadorCustomContainer" class="hidden mt-3 animate-fade-in-down">
+                                <input type="text" id="programadorCustom" placeholder="Digite o nome..." oninput="updatePreview()" class="w-full p-3.5 border border-brand-300 bg-brand-50 rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Operador</label>
+                            <select id="operadorSelect" onchange="handlePersonChange('operadorSelect', 'operadorCustomContainer'); updatePreview();" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm cursor-pointer">
+                                <option value="">Selecione.</option>
+                                <option value="Alexandro">Alexandro</option>
+                                <option value="Henrique Soares">Henrique Soares</option>
+                                <option value="Silvio">Silvio</option>
+                                <option value="Hugo Melo">Hugo Melo</option>
+                                <option value="Outro">Outro</option>
+                            </select>
+                            <div id="operadorCustomContainer" class="hidden mt-3 animate-fade-in-down">
+                                <input type="text" id="operadorCustom" placeholder="Digite o nome..." oninput="updatePreview()" class="w-full p-3.5 border border-brand-300 bg-brand-50 rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONTAINER DOS DIAS DA SEMANA -->
+                    <div class="pt-8 mt-4 border-t border-slate-100">
+                        <h3 class="text-[13px] font-black text-slate-800 uppercase tracking-widest mb-5 flex items-center gap-2">
+                            <i data-lucide="list-checks" class="w-4 h-4 text-brand-500"></i>
+                            Programação Diária
+                        </h3>
+                        
+                        <div id="daysContainer" class="space-y-4">
+                            <!-- Dias gerados via JS -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- COLUNA DA DIREITA: PREVIEW DO RELATÓRIO -->
+        <div class="w-full lg:w-1/2 flex flex-col bg-slate-200/50 p-4 rounded-3xl border border-slate-300/50 h-max sticky top-20">
+            <div id="report-card" class="w-full h-auto flex flex-col bg-white relative overflow-hidden rounded-lg shadow-xl border border-slate-200">
+                
+                <!-- HEADER DO PREVIEW -->
+                <div class="pl-6 pr-2 py-6 text-white flex justify-between items-center" style="background: linear-gradient(180deg, #1f2d3d 0%, #111827 100%);">
+                    <div class="flex-1 overflow-hidden">
+                        <h2 id="previewMainTitle" class="text-[14px] sm:text-[15px] font-bold leading-snug text-slate-100 whitespace-nowrap tracking-tight">Programação de Trabalho</h2>
+                        <h2 id="previewLocalText" class="text-[16px] sm:text-[17px] font-black leading-snug text-white mt-1">Trator</h2>
+                        <p id="previewWeekText" class="text-[13px] sm:text-[14px] font-medium text-slate-300 mt-0.5">Programação da Semana --</p>
+                        
+                        <div class="h-px bg-slate-500/60 w-full mt-3"></div>
+                    </div>
+                    <div class="shrink-0 ml-1">
+                        <img src="https://i.imgur.com/xSmARfS.png" alt="Logo SPG" crossorigin="anonymous" class="w-28 h-28 object-contain drop-shadow-md">
+                    </div>
+                </div>
+
+                <!-- INFO BAR (RESPONSÁVEIS) -->
+                <div class="px-8 py-5 border-b border-slate-200 bg-slate-50/50">
+                    <h3 class="text-[11px] font-bold text-slate-400 tracking-widest uppercase mb-3">Responsáveis</h3>
+                    <div class="flex flex-col sm:flex-row sm:gap-12 gap-2">
+                        <p class="text-[15px] text-slate-600">Solicitante: <span id="previewProgramador" class="font-bold text-slate-800">--</span></p>
+                        <p class="text-[15px] text-slate-600">Operador: <span id="previewOperador" class="font-bold text-slate-800">--</span></p>
+                    </div>
+                </div>
+
+                <!-- CORPO DO PREVIEW (Dias da Semana) -->
+                <div id="previewContent" class="px-8 py-8 flex flex-col h-auto min-h-[200px] bg-white">
+                    <div class="text-center text-slate-400 text-sm italic py-10 my-auto">
+                        Ative os dias ao lado e preencha a programação para visualizá-la aqui.
+                    </div>
+                </div>
+
+                <!-- RODAPÉ DA IMAGEM -->
+                <div class="bg-slate-50 px-8 py-4 text-center border-t border-slate-100 shrink-0">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">SPG SEDE • Departamento Agrícola</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE ENVIO -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex justify-center items-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-11/12 max-w-md transform transition-all scale-100">
+            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-brand-50 mb-4">
+                <i data-lucide="send" class="h-8 w-8 text-brand-600"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 text-center">Gerar Relatório?</h3>
+            <p class="text-sm text-slate-500 mt-3 text-center leading-relaxed font-medium">
+                A programação da semana será transformada em uma imagem e texto formatado pronto para envio.<br><br>
+            </p>
+            <div class="grid grid-cols-2 gap-3 mt-6">
+                <button onclick="hideConfirmModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-colors uppercase">
+                    Voltar
+                </button>
+                <button onclick="executeSend()" class="px-4 py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-brand-500/20 active:scale-95 uppercase flex justify-center items-center gap-2">
+                    <i data-lucide="check" class="w-4 h-4"></i> Continuar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE LIMPEZA -->
+    <div id="clearConfirmModal" class="fixed inset-0 bg-black/60 z-[60] hidden flex justify-center items-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 w-11/12 max-w-md transform transition-all scale-100">
+            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-50 mb-4">
+                <i data-lucide="trash-2" class="h-8 w-8 text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 text-center">Limpar Dados?</h3>
+            <p class="text-sm text-slate-500 mt-3 text-center leading-relaxed font-medium">
+                Tem certeza que deseja apagar todos os dados preenchidos? Esta ação não poderá ser desfeita.<br><br>
+            </p>
+            <div class="grid grid-cols-2 gap-3 mt-6">
+                <button onclick="hideClearConfirmModal()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-colors uppercase">
+                    Cancelar
+                </button>
+                <button onclick="executeClearData()" class="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-red-600/20 active:scale-95 uppercase flex justify-center items-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> Apagar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE SUCESSO E COMPARTILHAMENTO -->
+    <div id="successModal" class="fixed inset-0 bg-black/60 z-[70] hidden flex justify-center items-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 w-11/12 max-w-sm transform transition-all scale-100 text-center flex flex-col items-center">
+            <div class="flex items-center justify-center h-16 w-16 rounded-full bg-green-50 mb-5">
+                <i data-lucide="check-circle-2" class="h-10 w-10 text-green-500"></i>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">Resumo Pronto!</h3>
+            <p class="text-sm text-slate-500 mb-8 leading-relaxed font-medium">
+                Clique abaixo para enviar para o WhatsApp com o texto já formatado.
+            </p>
+            <div class="w-full flex flex-col gap-3">
+                <button onclick="executeShare()" class="w-full flex justify-center items-center gap-2 px-4 py-3 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-green-600/20 active:scale-95 uppercase">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i> WhatsApp
+                </button>
+                <button onclick="hideSuccessModal()" class="w-full px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-sm transition-colors uppercase">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE MENSAGEM -->
+    <div id="messageModal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-center items-center backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-sm transform transition-all scale-100 text-center">
+            <div id="msgIconContainer" class="mx-auto flex items-center justify-center h-12 w-12 rounded-full mb-4"></div>
+            <h3 id="msgTitle" class="text-lg font-bold text-slate-800"></h3>
+            <p id="msgText" class="text-sm text-slate-500 mt-2 mb-4"></p>
+            <button onclick="hideMessageModal()" class="w-full px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-sm transition-colors">OK</button>
+        </div>
+    </div>
+
+    <script>
+        const dbOperacoes = [
+            "Levantar canteiros",
+            "Transporte de material",
+            "Roçagem",
+            "Incorporação",
+            "Concluir roçagem",
+            "Roçar as laterais",
+            "Rosagens nas ruas",
+            "Gradeação",
+            "Adubação",
+            "Pulverização"
+        ];
+
+        const daysOfWeek = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
+        const currentYear = new Date().getFullYear();
+        
+        let currentWeekNumber = 1;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            const today = new Date();
+            currentWeekNumber = getISOWeekNumber(today);
+            
+            document.getElementById('weekNumber').value = currentWeekNumber;
+            
+            renderDaysForm();
+            
+            // Carregar dados salvos do localStorage
+            loadFromLocalStorage();
+            
+            updateDayLabels();
+            updatePreview();
+        });
+
+        // ==========================================
+        // FUNÇÕES DE LOCALSTORAGE E LIMPEZA
+        // ==========================================
+        
+        function saveToLocalStorage() {
+            const data = {
+                weekNumber: document.getElementById('weekNumber').value,
+                local: document.getElementById('localSelect').value,
+                programador: document.getElementById('programadorSelect').value,
+                programadorCustom: document.getElementById('programadorCustom').value,
+                operador: document.getElementById('operadorSelect').value,
+                operadorCustom: document.getElementById('operadorCustom').value,
+                days: {}
+            };
+
+            daysOfWeek.forEach(day => {
+                const dayId = day.toLowerCase().split('-')[0];
+                const checkbox = document.getElementById(`check_${dayId}`);
+                if (checkbox && checkbox.checked) {
+                    data.days[dayId] = {
+                        blocos: document.getElementById(`blocos_${dayId}`).value,
+                        tempo: document.getElementById(`tempo_${dayId}`).value,
+                        combustivel: document.getElementById(`combustivel_${dayId}`).value,
+                        operacoes: document.getElementById(`operacoes_${dayId}`).value,
+                    };
+                }
+            });
+
+            localStorage.setItem('programacaoTratorSPG_data', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('programacaoTratorSPG_data');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    
+                    if(data.weekNumber) document.getElementById('weekNumber').value = data.weekNumber;
+                    if(data.local) document.getElementById('localSelect').value = data.local;
+                    
+                    if(data.programador) {
+                        document.getElementById('programadorSelect').value = data.programador;
+                        handlePersonChange('programadorSelect', 'programadorCustomContainer');
+                    }
+                    if(data.programadorCustom) document.getElementById('programadorCustom').value = data.programadorCustom;
+                    
+                    if(data.operador) {
+                        document.getElementById('operadorSelect').value = data.operador;
+                        handlePersonChange('operadorSelect', 'operadorCustomContainer');
+                    }
+                    if(data.operadorCustom) document.getElementById('operadorCustom').value = data.operadorCustom;
+
+                    if (data.days) {
+                        Object.keys(data.days).forEach(dayId => {
+                            const dayData = data.days[dayId];
+                            const checkbox = document.getElementById(`check_${dayId}`);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                toggleDayFields(dayId);
+                                
+                                document.getElementById(`blocos_${dayId}`).value = dayData.blocos || '';
+                                document.getElementById(`tempo_${dayId}`).value = dayData.tempo || '';
+                                document.getElementById(`combustivel_${dayId}`).value = dayData.combustivel || '';
+                                document.getElementById(`operacoes_${dayId}`).value = dayData.operacoes || '';
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error("Erro ao carregar dados salvos:", e);
+                }
+            }
+        }
+
+        function confirmClearData() {
+            document.getElementById('clearConfirmModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function hideClearConfirmModal() {
+            document.getElementById('clearConfirmModal').classList.add('hidden');
+        }
+
+        function executeClearData() {
+            localStorage.removeItem('programacaoTratorSPG_data');
+            document.getElementById('planningForm').reset();
+            
+            daysOfWeek.forEach(day => {
+                const dayId = day.toLowerCase().split('-')[0];
+                const checkbox = document.getElementById(`check_${dayId}`);
+                if (checkbox && checkbox.checked) {
+                    checkbox.checked = false;
+                    toggleDayFields(dayId);
+                }
+            });
+
+            const today = new Date();
+            currentWeekNumber = getISOWeekNumber(today);
+            document.getElementById('weekNumber').value = currentWeekNumber;
+            
+            handlePersonChange('programadorSelect', 'programadorCustomContainer');
+            handlePersonChange('operadorSelect', 'operadorCustomContainer');
+
+            updateDayLabels();
+            updatePreview();
+            
+            hideClearConfirmModal();
+            showMessageModal("Sucesso", "O formulário foi limpo com sucesso.", "success");
+        }
+        
+        // ==========================================
+
+        function getISOWeekNumber(d) {
+            const date = new Date(d.getTime());
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            const week1 = new Date(date.getFullYear(), 0, 4);
+            return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+
+        function getMondayOfISOWeek(w, y) {
+            const simple = new Date(y, 0, 1 + (w - 1) * 7);
+            const dow = simple.getDay();
+            const ISOweekStart = simple;
+            if (dow <= 4)
+                ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+            else
+                ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+            return ISOweekStart;
+        }
+
+        function formatDayDate(date) {
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        }
+
+        function updateDayLabels() {
+            let weekVal = document.getElementById('weekNumber').value;
+            if (!weekVal) return;
+            let monday = getMondayOfISOWeek(parseInt(weekVal), currentYear);
+            daysOfWeek.forEach((dayName, index) => {
+                const dayId = dayName.toLowerCase().split('-')[0];
+                const dateForDay = new Date(monday);
+                dateForDay.setDate(monday.getDate() + index);
+                const dateStr = formatDayDate(dateForDay);
+                const fullLabel = `${dayName} (${dateStr})`;
+                const labelEl = document.getElementById(`label_${dayId}`);
+                if(labelEl) labelEl.innerText = fullLabel;
+                const cardEl = document.getElementById(`card_${dayId}`);
+                if(cardEl) cardEl.dataset.fullDateLabel = fullLabel;
+            });
+        }
+
+        function generateOperacoesOptions() {
+            let optionsHtml = '<option value="">+ Adicionar operação...</option>';
+            dbOperacoes.forEach(op => {
+                optionsHtml += `<option value="${op}">${op}</option>`;
+            });
+            return optionsHtml;
+        }
+
+        function renderDaysForm() {
+            const container = document.getElementById('daysContainer');
+            const options = generateOperacoesOptions();
+            let html = '';
+            daysOfWeek.forEach((day, index) => {
+                const dayId = day.toLowerCase().split('-')[0];
+                html += `
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300" id="card_${dayId}" data-full-date-label="${day}">
+                        <div class="px-5 py-4 flex justify-between items-center cursor-pointer group" onclick="toggleCheckbox('check_${dayId}')">
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold text-slate-700 group-hover:text-brand-600 transition-colors" id="label_${dayId}">${day}</span>
+                            </div>
+                            <div class="relative inline-block w-10 mr-1 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="hasApp_${dayId}" id="check_${dayId}" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer" onclick="event.stopPropagation(); toggleDayFields('${dayId}'); updatePreview();"/>
+                                <label for="check_${dayId}" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 cursor-pointer"></label>
+                            </div>
+                        </div>
+                        <div id="fields_${dayId}" class="p-5 space-y-4 hidden bg-slate-50/50 border-t border-slate-100">
+                            
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Blocos / Áreas</label>
+                                <input type="text" id="blocos_${dayId}" placeholder="Ex: 6, 10, Avenida" oninput="updatePreview()" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Tempo Estimado (h)</label>
+                                    <input type="number" step="0.1" id="tempo_${dayId}" placeholder="Ex: 3.9" oninput="updatePreview()" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Combustível (L)</label>
+                                    <input type="number" step="0.1" id="combustivel_${dayId}" placeholder="Ex: 31.2" oninput="updatePreview()" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm">
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-end mb-1.5">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Operações</label>
+                                    <select onchange="addSelectedOperacao(this, 'operacoes_${dayId}')" class="text-[10px] py-1 px-2 bg-slate-200/60 text-slate-600 hover:bg-slate-300/60 border border-slate-200 rounded outline-none cursor-pointer font-bold max-w-[150px] truncate transition-colors">
+                                        ${options}
+                                    </select>
+                                </div>
+                                <textarea id="operacoes_${dayId}" rows="2" placeholder="Descreva as operações do dia..." oninput="updatePreview()" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-medium text-slate-700 shadow-sm resize-none"></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function toggleCheckbox(checkboxId) {
+            const cb = document.getElementById(checkboxId);
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+            toggleDayFields(checkboxId.replace('check_', ''));
+            updatePreview();
+        }
+
+        function toggleDayFields(dayId) {
+            const checkbox = document.getElementById(`check_${dayId}`);
+            const fieldsContainer = document.getElementById(`fields_${dayId}`);
+            const card = document.getElementById(`card_${dayId}`);
+            
+            if (checkbox.checked) {
+                fieldsContainer.classList.remove('hidden');
+                card.classList.remove('border-slate-200', 'hover:border-slate-300');
+                card.classList.add('border-brand-500', 'ring-1', 'ring-brand-500/20', 'shadow-md');
+            } else {
+                fieldsContainer.classList.add('hidden');
+                card.classList.add('border-slate-200', 'hover:border-slate-300');
+                card.classList.remove('border-brand-500', 'ring-1', 'ring-brand-500/20', 'shadow-md');
+            }
+        }
+
+        function addSelectedOperacao(selectElement, textareaId) {
+            const val = selectElement.value;
+            if (!val) return;
+            const textarea = document.getElementById(textareaId);
+            let currentText = textarea.value.trim();
+            if (currentText.length > 0) {
+                if (currentText.endsWith(' e') || currentText.endsWith(',')) {
+                     textarea.value = currentText + " " + val;
+                } else {
+                     textarea.value = currentText + ", " + val;
+                }
+            } else {
+                textarea.value = val;
+            }
+            selectElement.value = '';
+            updatePreview();
+        }
+
+        function handlePersonChange(selectId, containerId) {
+            const select = document.getElementById(selectId);
+            const container = document.getElementById(containerId);
+            if (select.value === 'Outro') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function getPersonName(selectId, customInputId) {
+            const selectEl = document.getElementById(selectId);
+            if (selectEl && selectEl.value === 'Outro') {
+                return document.getElementById(customInputId).value.trim();
+            }
+            return selectEl ? selectEl.value.trim() : '';
+        }
+
+        let preparedShareData = null;
+
+        function updatePreview() {
+            const weekNumber = document.getElementById('weekNumber').value || currentWeekNumber;
+            const local = document.getElementById('localSelect').value;
+            const programador = getPersonName('programadorSelect', 'programadorCustom');
+            const operador = getPersonName('operadorSelect', 'operadorCustom');
+            
+            document.getElementById('previewLocalText').innerText = local !== 'Selecione.' && local ? local : 'Trator';
+            document.getElementById('previewWeekText').innerText = `Programação da Semana ${weekNumber}`;
+            document.getElementById('previewProgramador').innerText = programador || '--';
+            document.getElementById('previewOperador').innerText = operador || '--';
+
+            const previewContainer = document.getElementById('previewContent');
+            let previewHtml = '';
+            let textToShare = `*Programação de Trabalho - ${local}*\n*Semana ${weekNumber}*\n\n`;
+
+            let hasAnyContent = false;
+
+            daysOfWeek.forEach(day => {
+                const dayId = day.toLowerCase().split('-')[0];
+                const checkEl = document.getElementById(`check_${dayId}`);
+                const cardEl = document.getElementById(`card_${dayId}`);
+                const isActive = checkEl ? checkEl.checked : false;
+                const dayLabel = cardEl && cardEl.dataset.fullDateLabel ? cardEl.dataset.fullDateLabel : day;
+                
+                if (isActive) {
+                    hasAnyContent = true;
+                    const blocosEl = document.getElementById(`blocos_${dayId}`);
+                    const operacoesEl = document.getElementById(`operacoes_${dayId}`);
+                    const tempoEl = document.getElementById(`tempo_${dayId}`);
+                    const combustivelEl = document.getElementById(`combustivel_${dayId}`);
+                    
+                    let blocos = blocosEl ? blocosEl.value.trim() : '';
+                    let operacoes = operacoesEl ? operacoesEl.value.trim() : '';
+                    let tempo = tempoEl ? tempoEl.value.trim() : '';
+                    let combustivel = combustivelEl ? combustivelEl.value.trim() : '';
+
+                    textToShare += `*${dayLabel}*\n`;
+                    textToShare += `*Blocos:* ${blocos || '--'}\n`;
+                    if (tempo || combustivel) {
+                        textToShare += `*Tempo:* ${tempo ? tempo + 'h' : '--'} | *Combustível:* ${combustivel ? combustivel + 'L' : '--'}\n`;
+                    }
+                    textToShare += `*Operações:* ${operacoes || '--'}\n\n`;
+                    
+                    previewHtml += `
+                        <div class="mb-5 last:mb-0 bg-slate-50/80 rounded-2xl p-6 border border-slate-100 shadow-sm">
+                            <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200/60">
+                                <h4 class="text-[17px] font-black text-slate-800">${dayLabel}</h4>
+                            </div>
+                            <div class="grid grid-cols-2 gap-y-4 gap-x-6">
+                                <div class="col-span-2">
+                                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Blocos / Áreas</span>
+                                    <span class="text-[15px] font-bold text-slate-700">${blocos || '--'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tempo Estimado</span>
+                                    <span class="text-[15px] font-bold text-slate-700">${tempo ? tempo + ' h' : '--'}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Combustível</span>
+                                    <span class="text-[15px] font-bold text-slate-700">${combustivel ? combustivel + ' L' : '--'}</span>
+                                </div>
+                                <div class="col-span-2">
+                                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Operações</span>
+                                    <span class="text-[15px] font-medium text-slate-700 leading-relaxed">${operacoes || '--'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if (!hasAnyContent) {
+                previewContainer.innerHTML = `<div class="text-center text-slate-400 text-sm italic py-10 my-auto">Ative os dias ao lado e preencha a programação para visualizá-la aqui.</div>`;
+            } else {
+                previewContainer.innerHTML = previewHtml;
+            }
+            lucide.createIcons();
+
+            preparedShareData = {
+                shareText: textToShare.trim(),
+                filename: `Programacao_Trator_Semana_${weekNumber}.png`
+            };
+
+            saveToLocalStorage();
+        }
+
+        function confirmBeforeSend() {
+            const form = document.getElementById('planningForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            updatePreview();
+            document.getElementById('confirmModal').classList.remove('hidden'); 
+            lucide.createIcons(); 
+        }
+
+        function hideConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
+
+        async function executeSend() {
+            hideConfirmModal();
+            const btnSpan = document.querySelector('button[onclick="confirmBeforeSend()"] span.hidden.sm\\:inline') || document.querySelector('button[onclick="confirmBeforeSend()"] span');
+            const originalText = btnSpan.innerText; 
+            btnSpan.innerText = "Salvando e Gerando...";
+            try {
+                // 1. Monta os dados para enviar para a planilha
+                const weekNumber = document.getElementById('weekNumber').value || currentWeekNumber;
+                const local = document.getElementById('localSelect').value;
+                const programador = getPersonName('programadorSelect', 'programadorCustom');
+                const operador = getPersonName('operadorSelect', 'operadorCustom');
+                
+                let payload = [];
+                daysOfWeek.forEach(day => {
+                    const dayId = day.toLowerCase().split('-')[0];
+                    const checkEl = document.getElementById(`check_${dayId}`);
+                    const cardEl = document.getElementById(`card_${dayId}`);
+                    if (checkEl && checkEl.checked) {
+                        const dayLabel = cardEl && cardEl.dataset.fullDateLabel ? cardEl.dataset.fullDateLabel : day;
+                        payload.push({
+                            semana: weekNumber,
+                            local: local,
+                            programador: programador,
+                            operador: operador,
+                            diaSemana: dayLabel,
+                            blocos: document.getElementById(`blocos_${dayId}`).value.trim(),
+                            tempo: document.getElementById(`tempo_${dayId}`).value.trim(),
+                            combustivel: document.getElementById(`combustivel_${dayId}`).value.trim(),
+                            operacoes: document.getElementById(`operacoes_${dayId}`).value.trim()
+                        });
+                    }
+                });
+
+                // 2. Envia para o Google Sheets se houver dias preenchidos
+                if (payload.length > 0) {
+                    await sendDataToGoogleSheets(payload);
+                }
+
+                const element = document.getElementById('report-card');
+                const canvas = await html2canvas(element, { 
+                    scale: 5,
+                    useCORS: true, 
+                    backgroundColor: null,
+                    onclone: (doc) => {
+                        doc.documentElement.style.fontSize = '20px'; 
+                        const el = doc.getElementById('report-card'); 
+                        if (el) { 
+                            el.style.width = '800px'; 
+                            el.style.maxWidth = '800px'; 
+                            el.style.height = 'auto'; 
+                            el.style.margin = '0'; 
+                            el.style.borderRadius = '0'; 
+                            el.style.boxShadow = 'none';
+                        }
+                        
+                        const mainTitle = doc.getElementById('previewMainTitle');
+                        if (mainTitle) mainTitle.style.fontSize = '24px';
+                        
+                        const localText = doc.getElementById('previewLocalText');
+                        if (localText) {
+                            localText.style.fontSize = '30px';
+                            localText.style.marginTop = '6px';
+                        }
+                        
+                        const weekText = doc.getElementById('previewWeekText');
+                        if (weekText) {
+                            weekText.style.fontSize = '18px';
+                            weekText.style.marginTop = '6px';
+                        }
+                    }
+                });
+                preparedShareData.dataUrl = canvas.toDataURL('image/png');
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                preparedShareData.file = new File([blob], preparedShareData.filename, { type: 'image/png' });
+                document.getElementById('successModal').classList.remove('hidden');
+            } catch (err) {
+                console.error(err);
+                showMessageModal('Erro', 'Falha ao gerar a imagem.', 'error');
+            } finally {
+                btnSpan.innerText = originalText;
+            }
+        }
+
+        async function executeShare() {
+            if (!preparedShareData) return;
+            const { file, filename, shareText, dataUrl } = preparedShareData;
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) { 
+                try {
+                    await navigator.share({ files: [file], title: filename, text: shareText }); 
+                    hideSuccessModal();
+                } catch (shareErr) {
+                    console.log("Compartilhamento cancelado ou falhou:", shareErr);
+                }
+            } else { 
+                downloadFile(dataUrl, filename); 
+                setTimeout(() => { 
+                    window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank'); 
+                    hideSuccessModal();
+                }, 1000); 
+            }
+        }
+
+        function hideSuccessModal() { document.getElementById('successModal').classList.add('hidden'); }
+
+        async function sendDataToGoogleSheets(payload) {
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoY-LEtBw_Dxt7trr3y8RIAYoZwaEcm7hEMptI__Xz4qLVOKd0-CkQawQzpOel_mkG/exec"; 
+            try { 
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify(payload) 
+                }); 
+                console.log("Dados enviados para a planilha com sucesso!");
+            } catch (err) {
+                console.error("Erro ao enviar para a planilha:", err);
+            }
+        }
+
+        function downloadFile(uri, name) { 
+            const link = document.createElement('a'); 
+            link.href = uri; link.download = name; 
+            document.body.appendChild(link); link.click(); document.body.removeChild(link); 
+        }
+
+        function showMessageModal(title, message, type) {
+            const modal = document.getElementById('messageModal'); 
+            const iconContainer = document.getElementById('msgIconContainer');
+            const titleEl = document.getElementById('msgTitle'); 
+            const textEl = document.getElementById('msgText');
+            titleEl.innerText = title; textEl.innerText = message;
+            if (type === 'error') { iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4"; iconContainer.innerHTML = '<i data-lucide="alert-circle" class="h-6 w-6 text-red-600"></i>'; } 
+            else if (type === 'success') { iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4"; iconContainer.innerHTML = '<i data-lucide="check-circle" class="h-6 w-6 text-green-600"></i>'; }
+            else { iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4"; iconContainer.innerHTML = '<i data-lucide="info" class="h-6 w-6 text-blue-600"></i>'; }
+            modal.classList.remove('hidden'); lucide.createIcons();
+        }
+        function hideMessageModal() { document.getElementById('messageModal').classList.add('hidden'); }
+    </script>
+</body>
+</html>
