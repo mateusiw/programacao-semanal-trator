@@ -335,6 +335,7 @@
                         tasks.push({
                             blocos: block.querySelector('.task-blocos').value,
                             tempo: block.querySelector('.task-tempo').value,
+                            tempoUnit: block.querySelector('.task-tempo-unit').value,
                             combustivel: block.querySelector('.task-combustivel').value,
                             operacoes: block.querySelector('.task-operacoes').value,
                         });
@@ -536,6 +537,7 @@
             
             const blocosVal = taskData ? taskData.blocos : '';
             const tempoVal = taskData ? taskData.tempo : '';
+            const tempoUnitVal = taskData && taskData.tempoUnit ? taskData.tempoUnit : 'H';
             const combustivelVal = taskData ? taskData.combustivel : '';
             const operacoesVal = taskData ? taskData.operacoes : '';
 
@@ -555,12 +557,21 @@
 
                     <div class="grid grid-cols-2 gap-3 mb-4">
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Tempo Estimado (h)</label>
-                            <input type="number" step="0.1" class="task-tempo w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm" placeholder="Ex: 3.4" value="${tempoVal}" oninput="updatePreview()">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Tempo Estimado</label>
+                            <div class="flex">
+                                <input type="number" step="0.1" class="task-tempo w-full p-3 border border-slate-200 rounded-l-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm" placeholder="Ex: 3.4" value="${tempoVal}" oninput="updatePreview()">
+                                <select class="task-tempo-unit px-2 border border-l-0 border-slate-200 rounded-r-xl text-sm bg-slate-50 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm cursor-pointer" onchange="updatePreview()">
+                                    <option value="H" ${tempoUnitVal === 'H' ? 'selected' : ''}>H</option>
+                                    <option value="min" ${tempoUnitVal === 'min' ? 'selected' : ''}>min</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Combustível (L)</label>
-                            <input type="number" step="0.1" class="task-combustivel w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm" placeholder="Ex: 31" value="${combustivelVal}" oninput="updatePreview()">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Combustível</label>
+                            <div class="flex">
+                                <input type="number" step="0.1" class="task-combustivel w-full p-3 border border-slate-200 rounded-l-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm" placeholder="Ex: 31" value="${combustivelVal}" oninput="updatePreview()">
+                                <span class="px-3 py-3 bg-slate-100 border border-l-0 border-slate-200 rounded-r-xl text-slate-500 text-sm font-bold flex items-center">L</span>
+                            </div>
                         </div>
                     </div>
 
@@ -690,6 +701,7 @@
                         taskBlocks.forEach((block, index) => {
                             const blocos = block.querySelector('.task-blocos').value.trim();
                             const tempo = block.querySelector('.task-tempo').value.trim();
+                            const tempoUnit = block.querySelector('.task-tempo-unit').value;
                             const combustivel = block.querySelector('.task-combustivel').value.trim();
                             const operacoes = block.querySelector('.task-operacoes').value.trim();
 
@@ -697,7 +709,7 @@
                             if(index > 0) textToShare += `\n`;
                             textToShare += `*Blocos:* ${blocos || '--'}\n`;
                             if (tempo || combustivel) {
-                                textToShare += `*Tempo:* ${tempo ? tempo + 'h' : '--'} | *Combustível:* ${combustivel ? combustivel + 'L' : '--'}\n`;
+                                textToShare += `*Tempo:* ${tempo ? tempo + ' ' + tempoUnit : '--'} | *Combustível:* ${combustivel ? combustivel + ' L' : '--'}\n`;
                             }
                             textToShare += `*Operações:* ${operacoes || '--'}\n`;
                             
@@ -707,8 +719,8 @@
                                     <td class="py-3 px-4 font-bold text-slate-800 bg-slate-50/50">${dayLabel}</td>
                                     <td class="py-3 px-4 font-black text-slate-700">${blocos || '--'}</td>
                                     <td class="py-3 px-4 font-medium text-slate-700 leading-relaxed">${operacoes || '--'}</td>
-                                    <td class="py-3 px-4 text-center font-bold text-brand-700">${tempo ? tempo : '--'}</td>
-                                    <td class="py-3 px-4 text-center font-bold text-brand-700">${combustivel ? combustivel : '--'}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-brand-700">${tempo ? tempo + ' ' + tempoUnit : '--'}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-brand-700">${combustivel ? combustivel + ' L' : '--'}</td>
                                 </tr>
                             `;
                         });
@@ -784,6 +796,10 @@
                         const taskBlocks = document.querySelectorAll(`#tasks_container_${dayId} .task-block`);
                         
                         taskBlocks.forEach(block => {
+                            const tVal = block.querySelector('.task-tempo').value.trim();
+                            const tUnit = block.querySelector('.task-tempo-unit').value;
+                            const cVal = block.querySelector('.task-combustivel').value.trim();
+                            
                             payload.push({
                                 semana: weekNumber,
                                 local: local,
@@ -791,8 +807,8 @@
                                 operador: operador,
                                 diaSemana: dayLabel,
                                 blocos: block.querySelector('.task-blocos').value.trim(),
-                                tempo: block.querySelector('.task-tempo').value.trim(),
-                                combustivel: block.querySelector('.task-combustivel').value.trim(),
+                                tempo: tVal ? `${tVal} ${tUnit}` : '',
+                                combustivel: cVal ? `${cVal} L` : '',
                                 operacoes: block.querySelector('.task-operacoes').value.trim()
                             });
                         });
@@ -818,7 +834,7 @@
                         if (el) { 
                             el.style.width = '1200px'; 
                             el.style.maxWidth = '1200px';
-                            el.style.minHeight = '1697px'; // Proporção exata de folha A4 (1:1.414)
+                            el.style.height = 'auto'; // Altura dinâmica baseada no conteúdo
                             el.style.padding = '40px';
                             el.style.borderRadius = '0'; 
                             el.style.boxShadow = 'none';
