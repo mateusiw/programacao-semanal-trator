@@ -104,39 +104,17 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
                             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Número da Semana</label>
-                            <input type="number" id="weekNumber" required oninput="updateDayLabels(); updatePreview()" placeholder="Ex: 20" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm">
+                            <select id="weekModeSelect" onchange="toggleManualWeek(); updateDayLabels(); updatePreview()" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm cursor-pointer">
+                                <option value="auto">Automático (Atual)</option>
+                                <option value="manual">Informar manualmente</option>
+                            </select>
+                            <input type="number" id="weekNumber" oninput="updateDayLabels(); updatePreview()" placeholder="Ex: 20" class="hidden mt-2 w-full p-3.5 border border-brand-300 bg-brand-50 rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm">
                         </div>
                         <div>
-                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Local / Veículo</label>
+                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Veículo Selecionado</label>
                             <select id="localSelect" required onchange="updatePreview()" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm cursor-pointer">
                                 <option value="Trator">Trator</option>
                             </select>
-                        </div>
-                        <div>
-                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Programado por</label>
-                            <select id="programadorSelect" onchange="handlePersonChange('programadorSelect', 'programadorCustomContainer'); updatePreview();" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm cursor-pointer">
-                                <option value="">Selecione.</option>
-                                <option value="José Márcio">José Márcio</option>
-                                <option value="Guilherme Ramos">Guilherme Ramos</option>
-                                <option value="Outro">Outro</option>
-                            </select>
-                            <div id="programadorCustomContainer" class="hidden mt-3 animate-fade-in-down">
-                                <input type="text" id="programadorCustom" placeholder="Digite o nome..." oninput="updatePreview()" class="w-full p-3.5 border border-brand-300 bg-brand-50 rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Operador</label>
-                            <select id="operadorSelect" onchange="handlePersonChange('operadorSelect', 'operadorCustomContainer'); updatePreview();" class="w-full p-3.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm cursor-pointer">
-                                <option value="">Selecione.</option>
-                                <option value="Alexandro">Alexandro</option>
-                                <option value="Henrique Soares">Henrique Soares</option>
-                                <option value="Silvio">Silvio</option>
-                                <option value="Hugo Melo">Hugo Melo</option>
-                                <option value="Outro">Outro</option>
-                            </select>
-                            <div id="operadorCustomContainer" class="hidden mt-3 animate-fade-in-down">
-                                <input type="text" id="operadorCustom" placeholder="Digite o nome..." oninput="updatePreview()" class="w-full p-3.5 border border-brand-300 bg-brand-50 rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none font-bold text-slate-700 transition-all shadow-sm">
-                            </div>
                         </div>
                     </div>
 
@@ -172,7 +150,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex justify-between items-start gap-4">
+                    <div class="flex justify-between items-start gap-4 hidden" id="responsiblesHeader">
                         <div>
                             <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Solicitante</h3>
                             <p id="previewProgramador" class="text-[14px] font-bold text-slate-800 uppercase">--</p>
@@ -192,9 +170,8 @@
                 </div>
 
                 <!-- RODAPÉ DA IMAGEM (Card Branco) -->
-                <div class="w-full bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex justify-between items-center shrink-0">
-                    <span>SPG SEDE • Dept. Agrícola</span>
-                    <span>DOC-TRT-<span id="previewDocId">0000</span></span>
+                <div class="w-full bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex justify-center items-center shrink-0">
+                    <span>SPG SEDE</span>
                 </div>
             </div>
         </div>
@@ -285,12 +262,117 @@
             "Gradeação",
             "Adubação",
             "Pulverização"
-        ];
+        ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+        const dbSolicitantes = [
+            "José Márcio",
+            "Guilherme Ramos",
+            "Assis Paulo",
+            "Mateus Paulo",
+            "Cláudio Soares",
+            "Regilene Alves"
+        ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+        const dbOperadores = [
+            "Henrique Soares",
+            "Mecânico do Trator"
+        ].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
         const daysOfWeek = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
         const currentYear = new Date().getFullYear();
         
         let currentWeekNumber = 1;
+
+        // Dicionário de Autocorreção Inteligente para Operações
+        const spellCheckDict = {
+            "vasamento": "vazamento",
+            "vasamentos": "vazamentos",
+            "concerto": "conserto",
+            "concertar": "consertar",
+            "rossada": "roçada",
+            "rossar": "roçar",
+            "rossagem": "roçagem",
+            "rosada": "roçada",
+            "rosagem": "roçagem",
+            "rosar": "roçar",
+            "mecher": "mexer",
+            "puchar": "puxar",
+            "calsario": "calcário",
+            "calcario": "calcário",
+            "manuntenção": "manutenção",
+            "manutencao": "manutenção",
+            "pulverizaçao": "pulverização",
+            "pulverisacao": "pulverização",
+            "adubacao": "adubação",
+            "gradeaçao": "gradeação",
+            "gradeacao": "gradeação",
+            "chaci": "chassi",
+            "emgraxar": "engraxar",
+            "ingraxar": "engraxar",
+            "caxamba": "caçamba",
+            "cacamba": "caçamba",
+            "preção": "pressão",
+            "pressao": "pressão",
+            "pnel": "pneu",
+            "pnél": "pneu",
+            "mecânico preto": "",
+            "mecanico preto": "",
+            "preto mecânico": "",
+            "preto mecanico": "",
+            "preto": "",
+            "macaco": ""
+        };
+
+        // Dicionário de Bloqueio Específico para Operadores (Evita termos pejorativos/racistas)
+        const operatorSpellCheckDict = {
+            "mecânico preto": "",
+            "mecanico preto": "",
+            "preto mecânico": "",
+            "preto mecanico": "",
+            "preto": "",
+            "macaco": ""
+        };
+
+        function autoCorrectText(textarea) {
+            let originalText = textarea.value;
+            let newText = originalText;
+            
+            // Procura e substitui palavras erradas mantendo letras maiúsculas caso existam
+            Object.keys(spellCheckDict).forEach(wrong => {
+                const regex = new RegExp('\\b' + wrong + '\\b', 'gi');
+                newText = newText.replace(regex, match => {
+                    const right = spellCheckDict[wrong];
+                    if (right === "") return ""; // Se for para apagar o termo, retorna vazio
+                    if (match.charAt(0) === match.charAt(0).toUpperCase()) {
+                        return right.charAt(0).toUpperCase() + right.slice(1);
+                    }
+                    return right;
+                });
+            });
+
+            // Atualiza o texto se houve correção e mantém a posição do cursor
+            if (originalText !== newText) {
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = newText;
+                textarea.setSelectionRange(start, end);
+            }
+        }
+
+        // Função de bloqueio que se aplica apenas ao campo "Outro" do Operador
+        function autoCorrectOperator(input) {
+            let originalText = input.value;
+            let newText = originalText;
+            
+            Object.keys(operatorSpellCheckDict).forEach(wrong => {
+                const regex = new RegExp('\\b' + wrong + '\\b', 'gi');
+                newText = newText.replace(regex, match => operatorSpellCheckDict[wrong]);
+            });
+
+            if (originalText !== newText) {
+                input.value = newText;
+            }
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -298,7 +380,6 @@
             currentWeekNumber = getISOWeekNumber(today);
             
             document.getElementById('weekNumber').value = currentWeekNumber;
-            document.getElementById('previewDocId').innerText = Math.floor(1000 + Math.random() * 9000);
             
             renderDaysForm();
             
@@ -312,15 +393,30 @@
         // ==========================================
         // FUNÇÕES DE LOCALSTORAGE E LIMPEZA
         // ==========================================
+
+        function getEffectiveWeekNumber() {
+            const mode = document.getElementById('weekModeSelect').value;
+            if (mode === 'manual') {
+                return document.getElementById('weekNumber').value || currentWeekNumber;
+            }
+            return currentWeekNumber;
+        }
+
+        function toggleManualWeek() {
+            const select = document.getElementById('weekModeSelect');
+            const input = document.getElementById('weekNumber');
+            if (select.value === 'manual') {
+                input.classList.remove('hidden');
+            } else {
+                input.classList.add('hidden');
+            }
+        }
         
         function saveToLocalStorage() {
             const data = {
+                weekMode: document.getElementById('weekModeSelect').value,
                 weekNumber: document.getElementById('weekNumber').value,
                 local: document.getElementById('localSelect').value,
-                programador: document.getElementById('programadorSelect').value,
-                programadorCustom: document.getElementById('programadorCustom').value,
-                operador: document.getElementById('operadorSelect').value,
-                operadorCustom: document.getElementById('operadorCustom').value,
                 days: {}
             };
 
@@ -333,6 +429,10 @@
                     
                     taskBlocks.forEach(block => {
                         tasks.push({
+                            solicitante: block.querySelector('.task-solicitante').value,
+                            solicitanteCustom: block.querySelector('.task-solicitante-custom').value,
+                            operador: block.querySelector('.task-operador').value,
+                            operadorCustom: block.querySelector('.task-operador-custom').value,
                             blocos: block.querySelector('.task-blocos').value,
                             tempo: block.querySelector('.task-tempo').value,
                             tempoUnit: block.querySelector('.task-tempo-unit').value,
@@ -353,20 +453,12 @@
                 try {
                     const data = JSON.parse(savedData);
                     
+                    if(data.weekMode) {
+                        document.getElementById('weekModeSelect').value = data.weekMode;
+                        toggleManualWeek();
+                    }
                     if(data.weekNumber) document.getElementById('weekNumber').value = data.weekNumber;
                     if(data.local) document.getElementById('localSelect').value = data.local;
-                    
-                    if(data.programador) {
-                        document.getElementById('programadorSelect').value = data.programador;
-                        handlePersonChange('programadorSelect', 'programadorCustomContainer');
-                    }
-                    if(data.programadorCustom) document.getElementById('programadorCustom').value = data.programadorCustom;
-                    
-                    if(data.operador) {
-                        document.getElementById('operadorSelect').value = data.operador;
-                        handlePersonChange('operadorSelect', 'operadorCustomContainer');
-                    }
-                    if(data.operadorCustom) document.getElementById('operadorCustom').value = data.operadorCustom;
 
                     if (data.days) {
                         Object.keys(data.days).forEach(dayId => {
@@ -431,10 +523,8 @@
             const today = new Date();
             currentWeekNumber = getISOWeekNumber(today);
             document.getElementById('weekNumber').value = currentWeekNumber;
-            document.getElementById('previewDocId').innerText = Math.floor(1000 + Math.random() * 9000);
-            
-            handlePersonChange('programadorSelect', 'programadorCustomContainer');
-            handlePersonChange('operadorSelect', 'operadorCustomContainer');
+            document.getElementById('weekModeSelect').value = 'auto';
+            toggleManualWeek();
 
             updateDayLabels();
             updatePreview();
@@ -469,7 +559,7 @@
         }
 
         function updateDayLabels() {
-            let weekVal = document.getElementById('weekNumber').value;
+            let weekVal = getEffectiveWeekNumber();
             if (!weekVal) return;
             let monday = getMondayOfISOWeek(parseInt(weekVal), currentYear);
             daysOfWeek.forEach((dayName, index) => {
@@ -535,11 +625,27 @@
             const taskId = `${dayId}_task_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
             const options = generateOperacoesOptions();
             
+            const solVal = taskData ? taskData.solicitante : '';
+            const solCustomVal = taskData ? taskData.solicitanteCustom : '';
+            const opVal = taskData ? taskData.operador : '';
+            const opCustomVal = taskData ? taskData.operadorCustom : '';
             const blocosVal = taskData ? taskData.blocos : '';
             const tempoVal = taskData ? taskData.tempo : '';
             const tempoUnitVal = taskData && taskData.tempoUnit ? taskData.tempoUnit : 'H';
             const combustivelVal = taskData ? taskData.combustivel : '';
             const operacoesVal = taskData ? taskData.operacoes : '';
+
+            let solicitantesHtml = '<option value="">Selecione...</option>';
+            dbSolicitantes.forEach(nome => {
+                solicitantesHtml += `<option value="${nome}" ${solVal === nome ? 'selected' : ''}>${nome}</option>`;
+            });
+            solicitantesHtml += `<option value="Outro" ${solVal === 'Outro' ? 'selected' : ''}>Outro</option>`;
+
+            let operadoresHtml = '<option value="">Selecione...</option>';
+            dbOperadores.forEach(nome => {
+                operadoresHtml += `<option value="${nome}" ${opVal === nome ? 'selected' : ''}>${nome}</option>`;
+            });
+            operadoresHtml += `<option value="Outro" ${opVal === 'Outro' ? 'selected' : ''}>Outro</option>`;
 
             const taskHtml = `
                 <div class="task-block relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm" id="${taskId}">
@@ -549,9 +655,26 @@
                             <i data-lucide="x" class="w-3.5 h-3.5"></i>
                         </button>
                     ` : ''}
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Solicitante</label>
+                            <select class="task-solicitante w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 shadow-sm cursor-pointer" onchange="toggleCustomInput(this); updatePreview()">
+                                ${solicitantesHtml}
+                            </select>
+                            <input type="text" class="task-solicitante-custom ${solVal === 'Outro' ? '' : 'hidden'} mt-2 w-full p-3 border border-brand-300 bg-brand-50 rounded-xl text-sm focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none font-bold text-slate-700 shadow-sm" placeholder="Nome..." value="${solCustomVal}" oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Operador</label>
+                            <select class="task-operador w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none font-bold text-slate-700 shadow-sm cursor-pointer" onchange="toggleCustomInput(this); updatePreview()">
+                                ${operadoresHtml}
+                            </select>
+                            <input type="text" class="task-operador-custom ${opVal === 'Outro' ? '' : 'hidden'} mt-2 w-full p-3 border border-brand-300 bg-brand-50 rounded-xl text-sm focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 outline-none font-bold text-slate-700 shadow-sm" placeholder="Nome..." value="${opCustomVal}" oninput="autoCorrectOperator(this); updatePreview()">
+                        </div>
+                    </div>
 
-                    <div class="mb-4">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Blocos / Áreas</label>
+                    <div class="mb-4 pt-4 border-t border-slate-100">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Local / Área</label>
                         <input type="text" class="task-blocos w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm" placeholder="Ex: 5" value="${blocosVal}" oninput="updatePreview()">
                     </div>
 
@@ -559,10 +682,11 @@
                         <div>
                             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Tempo Estimado</label>
                             <div class="flex">
-                                <input type="number" step="0.1" class="task-tempo w-full p-3 border border-slate-200 rounded-l-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm" placeholder="Ex: 3.4" value="${tempoVal}" oninput="updatePreview()">
-                                <select class="task-tempo-unit px-2 border border-l-0 border-slate-200 rounded-r-xl text-sm bg-slate-50 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm cursor-pointer" onchange="updatePreview()">
+                                <input type="number" step="0.1" class="task-tempo ${tempoUnitVal === 'Indeterminado' ? 'hidden' : ''} w-full p-3 border border-slate-200 rounded-l-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm" placeholder="Ex: 3.4" value="${tempoVal}" oninput="updatePreview()">
+                                <select class="task-tempo-unit px-2 border ${tempoUnitVal === 'Indeterminado' ? 'rounded-xl border-l w-full' : 'border-l-0 rounded-r-xl'} border-slate-200 text-sm bg-slate-50 focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-bold text-slate-700 shadow-sm cursor-pointer" onchange="toggleTempoInput(this); updatePreview()">
                                     <option value="H" ${tempoUnitVal === 'H' ? 'selected' : ''}>H</option>
                                     <option value="min" ${tempoUnitVal === 'min' ? 'selected' : ''}>min</option>
+                                    <option value="Indeterminado" ${tempoUnitVal === 'Indeterminado' ? 'selected' : ''}>Indeterminado</option>
                                 </select>
                             </div>
                         </div>
@@ -582,7 +706,7 @@
                                 ${options}
                             </select>
                         </div>
-                        <textarea class="task-operacoes w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-medium text-slate-700 shadow-sm resize-none" rows="2" placeholder="Descreva as operações..." oninput="updatePreview()">${operacoesVal}</textarea>
+                        <textarea class="task-operacoes w-full p-3 border border-slate-200 rounded-xl text-sm bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all font-medium text-slate-700 shadow-sm resize-none" rows="2" placeholder="Descreva as operações..." oninput="autoCorrectText(this); updatePreview()">${operacoesVal}</textarea>
                     </div>
                 </div>
             `;
@@ -591,6 +715,29 @@
             lucide.createIcons();
             
             if (!taskData) updatePreview(); 
+        }
+
+        function toggleCustomInput(selectEl) {
+            const customInput = selectEl.nextElementSibling;
+            if (selectEl.value === 'Outro') {
+                customInput.classList.remove('hidden');
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function toggleTempoInput(selectEl) {
+            const numberInput = selectEl.previousElementSibling;
+            if (selectEl.value === 'Indeterminado') {
+                numberInput.classList.add('hidden');
+                selectEl.classList.remove('border-l-0', 'rounded-r-xl');
+                selectEl.classList.add('rounded-xl', 'w-full');
+                numberInput.value = ''; 
+            } else {
+                numberInput.classList.remove('hidden');
+                selectEl.classList.add('border-l-0', 'rounded-r-xl');
+                selectEl.classList.remove('rounded-xl', 'w-full');
+            }
         }
 
         function removeTaskBlock(taskId) {
@@ -648,35 +795,13 @@
             updatePreview();
         }
 
-        function handlePersonChange(selectId, containerId) {
-            const select = document.getElementById(selectId);
-            const container = document.getElementById(containerId);
-            if (select.value === 'Outro') {
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        function getPersonName(selectId, customInputId) {
-            const selectEl = document.getElementById(selectId);
-            if (selectEl && selectEl.value === 'Outro') {
-                return document.getElementById(customInputId).value.trim();
-            }
-            return selectEl ? selectEl.value.trim() : '';
-        }
-
         let preparedShareData = null;
 
         function updatePreview() {
-            const weekNumber = document.getElementById('weekNumber').value || currentWeekNumber;
+            const weekNumber = getEffectiveWeekNumber();
             const local = document.getElementById('localSelect').value;
-            const programador = getPersonName('programadorSelect', 'programadorCustom');
-            const operador = getPersonName('operadorSelect', 'operadorCustom');
             
             document.getElementById('previewHeaderSub').innerText = `${local} • Semana ${weekNumber}`;
-            document.getElementById('previewProgramador').innerText = programador || '--';
-            document.getElementById('previewOperador').innerText = operador || '--';
 
             const previewContainer = document.getElementById('previewContent');
             let textToShare = `*Programação do Trator - Semana ${weekNumber}*`;
@@ -699,20 +824,34 @@
                         hasAnyContent = true;
 
                         taskBlocks.forEach((block, index) => {
+                            const solSel = block.querySelector('.task-solicitante').value;
+                            const solCust = block.querySelector('.task-solicitante-custom').value.trim();
+                            const opSel = block.querySelector('.task-operador').value;
+                            const opCust = block.querySelector('.task-operador-custom').value.trim();
+                            
+                            const finalSolicitante = solSel === 'Outro' ? solCust : solSel;
+                            const finalOperador = opSel === 'Outro' ? opCust : opSel;
+
                             const blocos = block.querySelector('.task-blocos').value.trim();
                             const tempo = block.querySelector('.task-tempo').value.trim();
                             const tempoUnit = block.querySelector('.task-tempo-unit').value;
                             const combustivel = block.querySelector('.task-combustivel').value.trim();
                             const operacoes = block.querySelector('.task-operacoes').value.trim();
                             
-                            // Monta as linhas da tabela com o dayLabel (Ex: Segunda (11/05))
+                            const finalTempo = tempoUnit === 'Indeterminado' ? 'Indeterminado' : (tempo ? `${tempo} ${tempoUnit}` : '--');
+
+                            // Monta as linhas da tabela com os responsáveis inclusos
                             tableRows += `
                                 <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors">
                                     <td class="py-3 px-4 font-bold text-slate-800 bg-slate-50/50">${dayLabel}</td>
                                     <td class="py-3 px-4 font-black text-slate-700">${blocos || '--'}</td>
+                                    <td class="py-3 px-4">
+                                        <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-bold">Sol: <span class="text-brand-700">${finalSolicitante || '--'}</span></span>
+                                        <span class="block text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-0.5">Op: <span class="text-brand-700">${finalOperador || '--'}</span></span>
+                                    </td>
                                     <td class="py-3 px-4 font-medium text-slate-700 leading-relaxed">${operacoes || '--'}</td>
-                                    <td class="py-3 px-4 text-center font-bold text-brand-700">${tempo ? tempo + ' ' + tempoUnit : '--'}</td>
-                                    <td class="py-3 px-4 text-center font-bold text-brand-700">${combustivel ? combustivel + ' L' : '--'}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-brand-700 whitespace-nowrap">${finalTempo}</td>
+                                    <td class="py-3 px-4 text-center font-bold text-brand-700 whitespace-nowrap">${combustivel ? combustivel + ' L' : '--'}</td>
                                 </tr>
                             `;
                         });
@@ -724,15 +863,16 @@
                 previewContainer.innerHTML = `<div class="w-full text-center text-slate-400 text-sm italic py-10 my-auto bg-white rounded-2xl border border-slate-200 shadow-sm">Ative os dias ao lado e preencha a programação para visualizá-la aqui.</div>`;
             } else {
                 previewContainer.innerHTML = `
-                    <div class="w-full bg-white rounded-2xl shadow-sm border border-slate-300 overflow-hidden">
-                        <table class="w-full text-left border-collapse">
+                    <div class="w-full bg-white rounded-2xl shadow-sm border border-slate-300 overflow-x-auto">
+                        <table class="w-full min-w-[700px] text-left border-collapse">
                             <thead>
                                 <tr class="bg-brand-100 text-brand-800 text-[10px] sm:text-[11px] uppercase tracking-widest border-b-2 border-brand-200">
                                     <th class="p-3 sm:p-4 font-black w-[15%]">Dias</th>
-                                    <th class="p-3 sm:p-4 font-black w-[15%]">Blocos</th>
-                                    <th class="p-3 sm:p-4 font-black w-[40%]">Operações</th>
+                                    <th class="p-3 sm:p-4 font-black w-[10%]">Local</th>
+                                    <th class="p-3 sm:p-4 font-black w-[20%]">Responsáveis</th>
+                                    <th class="p-3 sm:p-4 font-black w-[30%]">Operações</th>
                                     <th class="p-3 sm:p-4 font-black text-center w-[15%]">Tempo Est.</th>
-                                    <th class="p-3 sm:p-4 font-black text-center w-[15%]">Combustível</th>
+                                    <th class="p-3 sm:p-4 font-black text-center w-[10%]">Combustível</th>
                                 </tr>
                             </thead>
                             <tbody class="text-[13px] sm:text-[14px] text-slate-700">
@@ -772,10 +912,8 @@
             btnSpan.innerText = "Salvando e Gerando...";
             try {
                 // Monta os dados para enviar para a planilha (Uma linha para cada bloco de tarefa)
-                const weekNumber = document.getElementById('weekNumber').value || currentWeekNumber;
+                const weekNumber = getEffectiveWeekNumber();
                 const local = document.getElementById('localSelect').value;
-                const programador = getPersonName('programadorSelect', 'programadorCustom');
-                const operador = getPersonName('operadorSelect', 'operadorCustom');
                 
                 let payload = [];
                 daysOfWeek.forEach(day => {
@@ -787,18 +925,28 @@
                         const taskBlocks = document.querySelectorAll(`#tasks_container_${dayId} .task-block`);
                         
                         taskBlocks.forEach(block => {
+                            const solSel = block.querySelector('.task-solicitante').value;
+                            const solCust = block.querySelector('.task-solicitante-custom').value.trim();
+                            const opSel = block.querySelector('.task-operador').value;
+                            const opCust = block.querySelector('.task-operador-custom').value.trim();
+                            
+                            const finalSolicitante = solSel === 'Outro' ? solCust : solSel;
+                            const finalOperador = opSel === 'Outro' ? opCust : opSel;
+
                             const tVal = block.querySelector('.task-tempo').value.trim();
                             const tUnit = block.querySelector('.task-tempo-unit').value;
                             const cVal = block.querySelector('.task-combustivel').value.trim();
                             
+                            const finalTempo = tUnit === 'Indeterminado' ? 'Indeterminado' : (tVal ? `${tVal} ${tUnit}` : '');
+
                             payload.push({
                                 semana: weekNumber,
                                 local: local,
-                                programador: programador,
-                                operador: operador,
+                                programador: finalSolicitante,
+                                operador: finalOperador,
                                 diaSemana: dayLabel,
                                 blocos: block.querySelector('.task-blocos').value.trim(),
-                                tempo: tVal ? `${tVal} ${tUnit}` : '',
+                                tempo: finalTempo,
                                 combustivel: cVal ? `${cVal} L` : '',
                                 operacoes: block.querySelector('.task-operacoes').value.trim()
                             });
@@ -830,9 +978,6 @@
                             el.style.borderRadius = '0'; 
                             el.style.boxShadow = 'none';
                         }
-                        
-                        // Como agora é uma tabela, não precisamos mais forçar o grid. 
-                        // A tabela naturalmente ocupará a largura total.
                     }
                 });
                 preparedShareData.dataUrl = canvas.toDataURL('image/png');
